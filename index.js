@@ -2,7 +2,13 @@ import "dotenv/config";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { readFile, unlink } from "fs/promises";
-import { Client, Events, GatewayIntentBits, Partials } from "discord.js";
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  MessageFlags,
+  Partials,
+} from "discord.js";
 
 const client = new Client({
   intents: [
@@ -140,15 +146,19 @@ client.on(Events.ClientReady, () => {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isMessageContextMenuCommand()) {
     if (interaction.commandName == "publicconvert") {
-      await interaction.deferReply({ ephemeral: false });
+      await interaction.deferReply();
     } else {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     }
     await interaction.editReply(await getResponseForContextMenu(interaction));
   } else if (interaction.isChatInputCommand()) {
-    await interaction.deferReply({
-      ephemeral: !(interaction.options.getBoolean("public") ?? false),
-    });
+    if (interaction.options.getBoolean("public") == true) {
+      await interaction.deferReply();
+    } else {
+      await interaction.deferReply({
+        flags: MessageFlags.Ephemeral,
+      });
+    }
     await interaction.editReply(await getResponseForSlashCommand(interaction));
   }
 });
